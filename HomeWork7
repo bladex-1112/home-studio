@@ -1,0 +1,22 @@
+public class triggerblock
+{
+	public static List<Id> alreadyProcessed = new List<Id>();
+}
+
+//
+
+trigger OpportClosedWon on Opportunity (after insert, after update)
+{
+        	List<Task> tsklist=new List<Task>();
+    		for (Opportunity p: [SELECT Id FROM Opportunity WHERE StageName='Closed Won' AND Id IN :Trigger.New])
+    			{
+      		  	if(!triggerblock.alreadyProcessed.contains(p.Id))
+                	{
+                    	tsklist.add(new Task(Subject='Follow Up Test Task', WhatId=p.Id));
+                        triggerblock.alreadyProcessed.add(p.Id);
+    				}
+                }
+   	 		if (tsklist.size() > 0) {
+                insert tsklist;
+   			}
+}
