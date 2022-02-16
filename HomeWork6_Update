@@ -1,19 +1,18 @@
-public class UpdateAccount
-{
+public class AssignTasks {
 	@InvocableMethod
-    public static void UpdateAcc (List <Account> accs)
-    {
-        ID AccId=accs[0].Id;							//AccId - id current account
-        User[] ActUsrs=[SELECT IsActive FROM User WHERE IsActive=true];		//ActUsrs - list of active users
-        integer randn=Integer.valueof(Math.random() * (ActUsrs.size()-1));	//randn - random number in users list
-        Task[] TaskOfAcc=[SELECT OwnerId FROM Task WHERE WhatId=:AccId];	//TaskOfAcc - list of Tasks by current Account
-        IF (TaskOfAcc.size()>3)							//for number of tasks > 3
-        {
-            FOR (integer i=0;i<TaskOfAcc.size();i++)
-            {
-                TaskOfAcc[i].OwnerId=ActUsrs[randn].Id;				//OwnerId of all Tasks by current Account set to random active user
-            }
+    public static void assignRandomUser (List<Account> accs) {
+        List<Task> tasktoupdate=new List<Task>();
+        User[] activeUsers=[SELECT IsActive FROM User WHERE IsActive=true];		
+        for (Account a : accs) {												
+        	integer randomn = Integer.valueof(Math.random() * (activeUsers.size() - 1));
+            Task[] taskOfAcc=[SELECT OwnerId FROM Task WHERE WhatId = :a.Id];		
+        	IF (taskofAcc.size() > 3)	{
+          	  FOR (integer i = 0; i < taskOfAcc.size(); i++)  {
+          	      taskofAcc[i].OwnerId = activeUsers[randomn].Id;
+                  tasktoupdate.add(taskofAcc[i]);
+				}
+        	}													
         }
-        update TaskOfAcc;							//update Tasks
+        update tasktoupdate;
     }
 }
