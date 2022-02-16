@@ -1,9 +1,13 @@
-public class CreateAccount
-{
+public class CreateTask {
 	@InvocableMethod
-    public static void CreateAcc (List <Account> accs)
-    {
-        Task NewT=new Task(WhatId=accs[0].Id,Subject='Negotiations with '+accs[0].Name);
-        insert NewT;
+    public static void createNewTask (List <Account> accs) {
+        List<Task> tasks = new List<Task>();
+        for(Account a:accs) {
+        tasks.add(new Task(
+            WhatId = a.Id,
+            Subject = 'Negotiations with ' + a.Name)
+                );
+        }
+       	insert tasks;
     }
 }
