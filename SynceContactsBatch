@@ -1,0 +1,33 @@
+public class SynceContactsBatch implements Database.Batchable<sObject> {
+
+    public Database.QueryLocator start (Database.BatchableContext bc) {
+        return Database.getQueryLocator('SELECT Id, BillingStreet,BillingCity, ' +
+                                        'BillingState, BillingCountry, BillingPostalCode, ' +
+                                        '(SELECT Id, MailingStreet, MailingState, ' +
+                                        'MailingCountry, MailingPostalCode, Is_Synced__c ' +
+                                        'FROM Contacts WHERE Is_Synced__c = false) ' + 
+                                        'FROM Account');
+    }
+    
+    public void execute(Database.BatchableContext bc, List<Account> accounts) {
+        List<Contact> contacts = new List<Contact>();
+        for (Account account: accounts) {
+            account.Updated_by_Contact__c = true;
+            for (Contact contact: account.contacts) {
+                contact.MailingStreet = account.BillingStreet;
+                contact.MailingCity = account.BillingCity;
+                contact.MailingState = account.BillingState;
+                contact.MailingCountry = account.BillingCountry;
+                contact.MailingPostalCode = account.BillingPostalCode;
+                contact.Is_Synced__c = true;
+                contacts.add(contact);
+            }
+        }
+        update accounts;
+        update contacts;
+    }
+
+    public void finish(Database.BatchableContext bc) {
+        
+    }
+}
