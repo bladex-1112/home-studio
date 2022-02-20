@@ -1,0 +1,8 @@
+public class SynceByContactsTasksScheduler implements Schedulable {
+    
+    public void execute (SchedulableContext sc) {
+        Database.executeBatch(new SynceByTaskBatch());
+        Database.executeBatch(new SynceByContactBatch());
+    }
+
+}
