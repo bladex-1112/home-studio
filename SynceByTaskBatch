@@ -1,0 +1,25 @@
+public class SynceByTaskBatch implements Database.Batchable<sObject> {
+
+        public Database.QueryLocator start (Database.BatchableContext bc) {
+        return Database.getQueryLocator('SELECT Id, Updated_by_Task__c, OwnerId ' +
+                                        '(SELECT Id, Is_Synced__c, Account_owner__c ' +
+                                        'FROM Tasks WHERE Is_Synced__c = false) ' + 
+                                        'FROM Account');
+    }
+    
+    public void execute(Database.BatchableContext bc, List<Account> accounts) {
+        List<Task> tasks = new List<Task>();
+        for (Account account: accounts) {
+            account.tasks[0].Account_owner__c = account.OwnerId;
+            account.Updated_by_Task__c = true;
+            account.tasks[0].Is_Synced__c = true;
+            tasks.add(account.tasks[0]);
+        }
+        update accounts;
+        update tasks;
+    }
+
+    public void finish(Database.BatchableContext bc) {
+        
+    }
+}
