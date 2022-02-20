@@ -1,0 +1,54 @@
+public class AccountTriggerHandler2 {
+    public static void handleAfterCreate (List<Account> newList, Map<Id, Account> newMap) {
+		List<Id> accountIds = new List<Id>();
+        for (Account account: newList) {
+            accountIds.add(account.Id);
+        }
+        createTasks(accountIds);
+    }
+
+    @future
+    public static void createTasks (List<Id> accountIds) { 
+		List<Task> tasks = new List<Task>();
+        for (Integer i=0; i < accountIds.size(); i++ ) {
+            tasks.add (new Task(is_Synced__c = false, WhatId = accountIds[i]));
+        }        
+        insert tasks;        
+    }
+    
+    public static void handleAfterUpdate (List<Account> newList, Map<Id, Account> newMap, List<Account> oldList, Map<Id, Account> oldMap) {
+		List<Id> changeAccountIds = new List<Id>();
+        for (Integer i = 0; i < newList.size(); i++) {
+            if(newList[i].BillingStreet!= oldList[i].BillingStreet ||
+          		newList[i].BillingCity!= newList[i].BillingCity ||
+          		newList[i].BillingState!= newList[i].BillingState ||
+          		newList[i].BillingPostalCode!= newList[i].BillingPostalCode ||
+               	newList[i].BillingCountry!= newList[i].BillingCountry) {
+               		changeAccountIds.add(newList[i].Id);
+                }
+        }
+		setSynceContactsFutureFromTrigger(changeAccountIds);        
+    }
+
+    @future
+    public static void setSynceContactsFutureFromTrigger (List<Id> changeList) {
+		List<Account> accounts = [SELECT Id,
+                                  (SELECT Id, Is_Synced__c, Processed_By_Future__c
+                                  FROM Contacts)
+                                  FROM Account
+                                  WHERE Id IN :changeList];
+        List<Contact> contacts = new List<Contact>();
+        for (Account account: accounts) {
+                for (Contact contact: account.contacts) {
+                    contact.Is_Synced__c = false;
+                    contact.Processed_By_Future__c = true;
+                    contacts.add(contact);
+                }
+        }
+        update contacts;
+    }
+    
+        public static void handleAfterUpdateQueueable (List<Account> newList, Map<Id, Account> newMap, List<Account> oldList, Map<Id, Account> oldMap) {
+            System.EnqueueJob(new SynceContactsQueueablefromTrigger(newList, oldList));
+    }
+}
